@@ -10,6 +10,7 @@
 #include <QWidget>
 #include <QLayout>
 
+#include <QMessageBox>
 
 radioactive::radioactive(QWidget *parent)
     : QWidget(parent)
@@ -23,7 +24,6 @@ radioactive::radioactive(QWidget *parent)
     //
 
     unlocked = false; // is password unlocked = false
-
 
 
 
@@ -61,6 +61,7 @@ radioactive::radioactive(QWidget *parent)
 
 radioactive::~radioactive()
 {
+    //getMainLog();
     delete ui;
 }
 
@@ -86,10 +87,10 @@ void radioactive::createMenu()
         connect(minimaxiAction, SIGNAL(triggered()) ,this, SLOT(minimize_maximize()) );
 
         logMenu = new QMenu(tr("&Log"),this);
-        getLogAction_qDebug = logMenu->addAction(tr("Get log in qDebug"));
-        getLogAction_qDebug->setShortcut(QKeySequence("F2"));
+        getLogAction = logMenu->addAction(tr("Show log"));
+        getLogAction->setShortcut(QKeySequence("F2"));
         menuBar->addMenu(logMenu);
-        connect(getLogAction_qDebug, SIGNAL(triggered()), this , SLOT(getMainLog_qDebug()) );
+        connect(getLogAction, SIGNAL(triggered()), this , SLOT(getMainLog()) );
 
         dbMenu = new QMenu(tr("&Database"));
         showIsotopesDataBase = dbMenu->addAction(tr("Show isotopes database"));
@@ -334,3 +335,12 @@ bool radioactive::accessNeeded()
     return unlocked;
 }
 
+void radioactive::getMainLog()
+{
+    QString logg = "";
+    for(int i=0;i<mainLog.size();i++)
+    {
+        logg+=mainLog[i]+"\n";
+    }
+    QMessageBox::information(0,"Log of current execution",logg);
+}

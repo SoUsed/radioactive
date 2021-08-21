@@ -43,7 +43,7 @@ public:
     QAction *minimaxiAction;
     QMenuBar *menuBar;
     QMenu *logMenu;
-    QAction *getLogAction_qDebug;
+    QAction *getLogAction;
     QMenu *dbMenu;
     QAction *showIsotopesDataBase;
     QAction *openDBConsole;
@@ -137,7 +137,7 @@ private:
 public slots:
     void minimize_maximize();
 
-    //void getMainLog_qDebug();
+    void getMainLog();
 
     void addButtonClicked();
     //SQL

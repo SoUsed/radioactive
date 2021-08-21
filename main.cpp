@@ -1,11 +1,17 @@
 #include "radioactive.h"
 
 #include <QApplication>
+#include <QScreen>
+
+#include <libs/floatx.hpp>
+
+typedef flx::floatx<64,256> bignumber;
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    radioactive w;
-    w.show();
-    return a.exec();
+    QApplication app(argc, argv);
+    radioactive mainWind;
+    mainWind.setGeometry(app.screens()[0]->geometry());
+    mainWind.show();
+    return app.exec();
 }
