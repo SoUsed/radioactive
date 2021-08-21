@@ -1,4 +1,4 @@
-QT       += core gui charts sql
+QT       += core gui charts sql testlib
 
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -10,11 +10,14 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    isotope.cpp \
     main.cpp \
     radioactive.cpp
 
 HEADERS += \
     connectisotopedb.h \
+    isotope.h \
+    libs/floatx.hpp \
     radioactive.h
 
 FORMS += \
@@ -27,3 +30,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 DISTFILES += \
     plotview.py
+
+
+
+
