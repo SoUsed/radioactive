@@ -3,10 +3,6 @@
 #include <QApplication>
 #include <QScreen>
 
-#include <libs/floatx.hpp>
-
-typedef flx::floatx<64,256> bignumber;
-
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);

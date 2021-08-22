@@ -17,8 +17,20 @@ SOURCES += \
 HEADERS += \
     connectisotopedb.h \
     isotope.h \
-    libs/floatx.hpp \
-    radioactive.h
+    radioactive.h \
+    ttmath/ttmath.h \
+    ttmath/ttmathbig.h \
+    ttmath/ttmathdec.h \
+    ttmath/ttmathint.h \
+    ttmath/ttmathmisc.h \
+    ttmath/ttmathobjects.h \
+    ttmath/ttmathparser.h \
+    ttmath/ttmaththreads.h \
+    ttmath/ttmathtypes.h \
+    ttmath/ttmathuint.h \
+    ttmath/ttmathuint_noasm.h \
+    ttmath/ttmathuint_x86.h \
+    ttmath/ttmathuint_x86_64.h
 
 FORMS += \
     radioactive.ui
@@ -29,7 +41,9 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
-    plotview.py
+    plotview.py \
+    ttmath/ttmathuint_x86_64_msvc.asm \
+    ttmath/win64_assemble.bat
 
 
 
