@@ -2,11 +2,13 @@
 #define ISOTOPE_H
 
 #include <QObject>
-#include <libs/floatx.hpp>
 #include <QtSql>
 #include <QDebug>
 
-typedef flx::floatx<64,256> bignumber;
+#include "ttmath/ttmath.h"
+
+typedef ttmath::Big<TTMATH_BITS(64), TTMATH_BITS(256)> bignumber;
+
 
 class isotope : public QObject
 {
@@ -33,9 +35,11 @@ public:
     QSqlTableModel *model;
     void initModel();
 
-    void doDecays(int iterTime=0);
+    isotope doDecays(bignumber iterTime=0);
 
     void addQuantity(bignumber supplement=0);
+
+    bool isIso(int mass, int charge);
 
 
 signals:
