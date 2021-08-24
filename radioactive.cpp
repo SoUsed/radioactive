@@ -12,6 +12,12 @@
 
 #include <QMessageBox>
 
+/*!
+    \brief Класс, в котором реализован интерфейс и контроллер
+
+    Конструктор генерирует окно с виджетом для графика и двумя лэйаутами для ввода данных.
+    Обьект класса посылает всякие запросы в isotopedb, управляет классом radioactivemix и должен логировать происходящее
+*/
 radioactive::radioactive(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::radioactive)
@@ -65,6 +71,9 @@ radioactive::~radioactive()
     delete ui;
 }
 
+/*!
+ Выводит лог в консоль дебага, так же делает запись в основной лог (и в переменную, и в файл)
+ */
 void radioactive::newLog(QString nLog)
 {
     QString logToPush = "[" + QTime::currentTime().toString("HH:mm:ss") + "] " +  nLog;
@@ -75,6 +84,13 @@ void radioactive::newLog(QString nLog)
 
 }
 
+/*!
+    \brief Метод, создающий верхнюю менюшку окна
+
+    Создает меню управления окном, логами и базой данных.
+    Создает соединения между сигналами меню и слотами класса
+
+ */
 void radioactive::createMenu()
 {
         menuBar = new QMenuBar;
@@ -104,6 +120,12 @@ void radioactive::createMenu()
         connect(showIsotopesDataBase, SIGNAL(triggered()), this, SLOT(showTable()) );
 }
 
+/*!
+    \brief Метод, создающий групбокс для управления смесью
+
+    Создает формы для ввода и просмотра данных о радиоактивной смеси
+
+ */
 void radioactive::createEditGroup()
 {
     editGroupBox = new QGroupBox(tr("Edit"));
@@ -139,6 +161,13 @@ void radioactive::createEditGroup()
     editGroupBox->setLayout(eGB);
 
 }
+
+/*!
+    \brief Метод, создающий окно настройки итераций
+
+    Создает меню управления временем итерации, количеством итераций
+
+ */
 
 void radioactive::createProcessGroup()
 {
@@ -211,6 +240,10 @@ void radioactive::createProcessGroup()
     processGroupBox->setLayout(pGB);
 }
 
+/*!
+    Добавляет в окно виджет для графика
+
+ */
 void radioactive::createPlot()
 {
     plotWidget = new QWidget;
@@ -224,11 +257,20 @@ void radioactive::createPlot()
     plotWidget->setLayout(chLayout);
 }
 
+/*!
+    \brief Метод, добавляющий изотоп в смесь по нажатию соответствующей кнопки
+
+    Вызывает в radioactivemix метод addIso()
+ */
 void radioactive::addButtonClicked()
 {
     newLog("Add button Clicked");
 }
 
+/*!
+    Переключение режимов между "полноэкранный в окне" и "окно"
+
+ */
 void radioactive::minimize_maximize()
 {
     if(isMaximized())
@@ -243,6 +285,10 @@ void radioactive::minimize_maximize()
     }
 }
 
+/*!
+    Выгружает из isotopedb все записи, предоставляя их интерфейсу
+
+ */
 void radioactive::getIsotopeList()
 {
     isotDB = QSqlDatabase::addDatabase("QSQLITE");
@@ -259,6 +305,10 @@ void radioactive::getIsotopeList()
 
 }
 
+/*!
+    Инициализирует модель базы isotopedb
+
+ */
 void radioactive::initializeModel()
 {
     if(!createConnection())
@@ -283,6 +333,10 @@ void radioactive::initializeModel()
     qDebug() << model->setHeaderData(6, Qt::Horizontal, QObject::tr("Beta decay probability"));
 }
 
+/*!
+    Показывает таблицу изотопов из isotopedb
+
+ */
 void radioactive::showTable()
 {
     QTableView *view = new QTableView;
@@ -292,6 +346,12 @@ void radioactive::showTable()
     view->show();
 }
 
+/*!
+    \brief Вызывает окно запроса к isotopedb
+
+    Использует метод accessNeeded(), чтобы ограничить доступ к лишнему вмешательству в бд пользователю
+
+ */
 void radioactive::openConsoleDB()
 {
     if(accessNeeded())
@@ -318,6 +378,10 @@ void radioactive::openConsoleDB()
     }
 }
 
+/*!
+    Метод, ограничивающий доступ к отдельным элементам программы
+
+ */
 bool radioactive::accessNeeded()
 {
     if(unlocked)
@@ -335,6 +399,10 @@ bool radioactive::accessNeeded()
     return unlocked;
 }
 
+/*!
+    Открывает в отдельном окне лог текущего запуска приложения
+
+ */
 void radioactive::getMainLog()
 {
     QString logg = "";

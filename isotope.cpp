@@ -3,14 +3,21 @@
 
 #include <QDebug>
 
+/*!
+    \brief Класс isotope реализует модель некого количества радиоактивного изотопа, со всеми необходимыми характеристиками
+
+    Выгружает общие данные о радиоакивном элементе из isotopedb
+ */
 isotope::isotope(QObject *parent, int mass, int charge, bignumber quantity) : QObject(parent)
 {
+    base2 = 2;
+
     _mass = mass;
     _charge = charge;
     isoQuantity = quantity;
 
     initModel();
-    //! вот тут надо выгребать остаток штук из бд, ану допили потом
+
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
     db.setHostName("iSotopeServer");
     db.setDatabaseName("isotopes.gdb");
@@ -35,6 +42,10 @@ isotope::isotope(QObject *parent, int mass, int charge, bignumber quantity) : QO
 
 }
 
+/*!
+    Инициализирует модель базы isotopedb
+
+ */
 void isotope::initModel()
 {
     if(!createConnection())
@@ -59,6 +70,10 @@ void isotope::initModel()
     qDebug() << model->setHeaderData(6, Qt::Horizontal, QObject::tr("Beta decay probability"));
 }
 
+/*!
+    Проверяет, явлвяется ли данный элемент радиоактивным. Проводит поиск по бд isotopedb
+
+ */
 bool isotope::isIso(int mass, int charge)
 {
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
@@ -77,9 +92,22 @@ bool isotope::isIso(int mass, int charge)
 
 }
 
-isotope isotope::doDecays(bignumber iterTime)
+/*!
+    \brief Моделирует радиоактивный распад изотопа за промежуток iterTime
+
+    Исользует формулу школьной физики N = N0 * 2^(t/T) для распада
+
+    Рассматривает три сценарция:
+    1) осуществить только бета распад, не пересчитвая распределение продуктов распада
+    2) осуществить только альфа распад, не пересчитвая распределение продуктов распада
+    3) осуществить оба распада, расчитывая распределение продуктов распада
+    (кажется, что не приступать сразу к 3 в среднем экономней, ведь таких изотопов не то чтобы много.
+    При этом, если оставить только 3, програма по функциональности не потеряет ничего)
+
+ */
+QPair < QVector<isotope> , bignumber> isotope::doDecays(bignumber iterTime)
 {
-    bignumber newQuantity = isoQuantity * ttmath::Exp(iterTime/_halflife);//! isoQuantity* "e" ^ (iterTime/_halflife)
+    bignumber newQuantity = isoQuantity * base2.Pow(iterTime/_halflife);//! isoQuantity* 2 ^ (iterTime/_halflife)
 
     bignumber decN = isoQuantity - newQuantity;
 
@@ -88,7 +116,14 @@ isotope isotope::doDecays(bignumber iterTime)
         isoQuantity = newQuantity;
         if(isIso(_mass,_charge+1))
         {
-        return isotope(0,_mass,_charge+1,decN); // return new isotope
+        QVector <isotope> vc;
+        vc.push_back((isotope(0,_mass,_charge+1,decN)));
+        return QPair < QVector<isotope>, bignumber> (vc , decN); // return new isotope
+        }
+        else
+        {
+            QVector <isotope> vc;
+            return QPair < QVector<isotope>, bignumber> (vc , decN);
         }
 
     }
@@ -97,12 +132,41 @@ isotope isotope::doDecays(bignumber iterTime)
         isoQuantity = newQuantity;
         if(isIso(_mass-4,_charge-2))
         {
-        return isotope(0,_mass-4,_charge-2,decN); // return new isotope
+        QVector <isotope> vc;
+        vc.push_back(isotope(0,_mass-4,_charge-2,decN));
+        return QPair < QVector<isotope>, bignumber> (vc , decN);  // return new isotope
+        }
+        else
+        {
+            QVector <isotope> vc;
+            return QPair < QVector<isotope>, bignumber> (vc , decN);
         }
     }
     // также предусмотреть сценарий множественного распада
+    else
+    {
+        isoQuantity = newQuantity;
+        QVector <isotope> vc;
+        if(isIso(_mass,_charge+1))
+        {
+        vc.push_back((isotope(0,_mass,_charge+1,decN*_alpha_pr)));
+        }
+        if(isIso(_mass-4,_charge-2))
+        {
+        vc.push_back(isotope(0,_mass-4,_charge-2,decN*_beta_pr));
+        }
+        return QPair < QVector<isotope>, bignumber> (vc , decN);
+    }
 }
 
+/*!
+    \brief Функция, которая добавляет в изотоп новые элементы
+
+    Функцию использует преимущественно radioactivemix. Так же ее может использовать интерфейс, для добавления в смесь изотопов элемента, который там уже есть
+
+    Верхние элементы радиоактивного ряда переходят в нижние во время каждой итерации.
+    Использование этой функции необходимо для целосности isotope_list в radioactivemix, чтобы после итерации в списке не хранилось несколько одинаковых элементов
+ */
 void isotope::addQuantity(bignumber supplement)
 {
     isoQuantity += supplement;

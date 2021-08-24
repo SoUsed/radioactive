@@ -29,8 +29,8 @@ public:
     ~radioactive();
 
     // logging
-    std::vector <QString> mainLog;
-    QFile log_to_save;
+    std::vector <QString> mainLog; /// переменная, в которой хранятся все логи текущего выполнения программы
+    QFile log_to_save; /// файл, в который последовательно записывается mainLog. С нуля ерезаписывается при новом запуске программы
     void newLog(QString nLog);
     //
 
@@ -51,10 +51,10 @@ public:
 
     // edit groupbox
     QGroupBox *editGroupBox;
-    QTextEdit *numOfMoleculesToAdd;
+    QTextEdit *numOfMoleculesToAdd; /// рамка для ввода количества добавляемого в смесь вещества
     QComboBox *isotopeToAdd;
 
-    std::vector <QAction> isotopesList;
+    std::vector <QAction> isotopesList; /// список всех изотопов, используемый для выпадающего списка isotopeToAdd
     void getIsotopeList();
 
     void createEditGroup();
@@ -65,12 +65,12 @@ public:
 
     // process groupbox
     QGroupBox *processGroupBox;
-    QTextEdit *timeOfIteration;
+    QTextEdit *timeOfIteration; /// рамка для ввода времени одной итерации
     void createProcessGroup();
 
     QLabel *Process1CollumnDesc;
 
-    QComboBox *unitsIteration;
+    QComboBox *unitsIteration; /// выпадающий список, в котором быбираются единицы времени для timeOfIteration
     QAction *secondsIteration;
     QAction *minutesIteration;
     QAction *hoursIteration;
@@ -78,24 +78,36 @@ public:
 
     //! !?
     QPushButton *continueButton;
+    //! !?
     QPushButton *stopButton;
+    //! !?
     QPushButton *setTimeButton;
     //!
 
+    //! !?
     QTextEdit *updateTime;
+    //! !?
     QComboBox *unitsUpdate;
+    //! !?
     QLabel *Process2CollumnDesc;
+    //! !?
     QPushButton *setUpdateButton;
 
+    //! !?
     QAction *secondsUpdate;
+    //! !?
     QAction *minutesUpdate;
+    //! !?
     QAction *hoursUpdate;
+    //! !?
     QAction *yearsUpdate;
 
     QLabel *Process4CollumnDesc;
+    //! !?
     QPushButton *stopIt;
+    //! !?
     QPushButton *continueIt;
-    QComboBox *graphUnitsBox;
+    QComboBox *graphUnitsBox; /// выпадающий список для выбора единиц времени на оси на графике (с,мин,ч,год)
     QPushButton *setGraphUnits;
     QLabel *pauseunpause;
 
@@ -107,7 +119,7 @@ public:
 
     // Plot
 
-    QWidget *plotWidget;
+    QWidget *plotWidget; /// виджет, в котором должно в теории вмещаться окно интерфейса cufflinks с графиком
     void createPlot();
     QChart *mainChart;
     QChartView *mainChartView;
@@ -117,8 +129,8 @@ public:
 
 
     //SQL
-    QSqlDatabase isotDB;
-    QSqlTableModel *model;
+    QSqlDatabase isotDB; /// переменная базы данных isotopedb
+    QSqlTableModel *model; /// модель бд isotopedb
     void initializeModel();
 
 
@@ -128,7 +140,7 @@ public:
 
     //prv
     bool accessNeeded();
-    bool unlocked;
+    bool unlocked; /// переменная, которая хранит информацию о том, ввел ли пользователь (является ли он авторизованным)
 
 
 private:
