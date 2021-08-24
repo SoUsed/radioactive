@@ -12,12 +12,14 @@ CONFIG += c++11
 SOURCES += \
     isotope.cpp \
     main.cpp \
-    radioactive.cpp
+    radioactive.cpp \
+    radioactivemix.cpp
 
 HEADERS += \
     connectisotopedb.h \
     isotope.h \
     radioactive.h \
+    radioactivemix.h \
     ttmath/ttmath.h \
     ttmath/ttmathbig.h \
     ttmath/ttmathdec.h \
