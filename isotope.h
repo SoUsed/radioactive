@@ -10,16 +10,24 @@
 typedef ttmath::Big<TTMATH_BITS(64), TTMATH_BITS(256)> bignumber;
 
 
-class isotope : public QObject
+class isotope
 {
-    Q_OBJECT
 
     // data to be got from db
-    int _charge; /// Заряд ядра. В паре с массой является уникальным идентификатором
-    int _mass;  /// Масса атома в а.о.м. В паре с зарядом является уникальным идентификатором
-    double _alpha_pr; /// Табличное значение: вероятность того, что нестабильный элемент совершит альфа-распад
-    double _beta_pr; /// Табличное значение: вероятность того, что нестабильный элемент совершит бета-распад
-    bignumber _halflife; /// Табличное значение: период полураспада
+    //! Заряд ядра. В паре с массой является уникальным идентификатором
+    int _charge;
+
+    //! Масса атома в а.о.м. В паре с зарядом является уникальным идентификатором
+    int _mass;
+
+    //! Табличное значение: вероятность того, что нестабильный элемент совершит альфа-распад
+    double _alpha_pr;
+
+    //! Табличное значение: вероятность того, что нестабильный элемент совершит бета-распад
+    double _beta_pr;
+
+    //! Табличное значение: период полураспада
+    bignumber _halflife;
     //
 
 
@@ -27,14 +35,21 @@ class isotope : public QObject
 
 
 public:
-    const bignumber base2=2; /// Число 2, но просто записанное в bignumber. Нужна, чтобы совершать операцию 2^bignumber
 
-    explicit isotope(QObject *parent = nullptr, int mass=0, int charge = 0, bignumber quantity=0);
+    explicit isotope(int mass=0, int charge = 0, bignumber quantity=0);
 
-    bignumber isoQuantity; /// обьект isotope так же хранит кол-во своих атомов в смеси
+    //! обьект isotope так же хранит кол-во своих атомов в смеси
+    bignumber isoQuantity;
 
-    QSqlDatabase isotDB; /// переменная для бд isotopedb
-    QSqlTableModel *model; /// модель бд isotopedb
+    //! Название для таблицы
+    QString name;
+
+    //! переменная для бд isotopedb
+    QSqlDatabase db;
+    //QSqlQuery qr;
+
+    //! модель бд isotopedb
+    QSqlTableModel *model;
     void initModel();
 
     QPair < QVector<isotope> , bignumber> doDecays(bignumber iterTime=0);
@@ -43,7 +58,8 @@ public:
 
     bool isIso(int mass, int charge);
 
-    QPair<int,int> getMC() /// возвращает пару значений "масса, заряд" для сравнения изотопов внутри смеси
+    //! возвращает пару значений "масса, заряд" для сравнения изотопов внутри смеси
+    QPair<int,int> getMC()
     {
         return QPair<int,int>(_mass,_charge);
     }

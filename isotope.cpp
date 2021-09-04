@@ -8,37 +8,38 @@
 
     Выгружает общие данные о радиоакивном элементе из isotopedb
  */
-isotope::isotope(QObject *parent, int mass, int charge, bignumber quantity) : QObject(parent)
+isotope::isotope(int mass, int charge, bignumber quantity)
 {
-    base2 = 2;
-
     _mass = mass;
     _charge = charge;
     isoQuantity = quantity;
 
-    initModel();
-
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setHostName("iSotopeServer");
-    db.setDatabaseName("isotopes.gdb");
-    db.open();
-    QSqlQuery qr(db);
-
-    QString request = "SELECT 'Half-life period','Alpha decay probability','Beta decay probability' FROM 'isotopes' WHERE 'ID' = " + QString::number(mass) + "0" + QString::number(charge);
-
-    QSqlRecord rec = qr.record();
 
 
-    if(qr.exec())
+    //initModel();
+
+    QString idStr = QString( QString::number(mass) + "0" + QString::number(charge) + "0");
+
+    QString request = "SELECT halflife,alphaProb,betaProb,name FROM 'isotopes' WHERE id = " + idStr;
+    //db = QSqlDatabase::addDatabase("QSQLITE");
+    //db.setDatabaseName("isotopes.gdb");
+    //db.open();
+
+    QSqlQuery qr(request,db);
+
+
+    if(qr.first())
     {
-        _alpha_pr = qr.value(rec.indexOf("Alpha decay probability")).toFloat();
-        _beta_pr = qr.value(rec.indexOf("Beta decay probability")).toFloat();
-        _halflife = bignumber(qr.value(rec.indexOf("Half-life period")).toString().toStdString());
+        _alpha_pr = qr.value(1).toFloat();
+        _beta_pr = qr.value(2).toFloat();
+        _halflife = bignumber(qr.value(0).toString().toStdString());
+        name = qr.value(3).toString();
     }
     else
     {
-        qDebug()<<"SQL FATAL | No Entry for current isotope in database ( "<<mass<<", " << charge << " )";
+        qDebug()<<"SQL FATAL | No Entry for current isotope in database ( "<<mass<<", " << charge << " )" << " id: " << idStr;
     }
+
 
 }
 
@@ -48,26 +49,18 @@ isotope::isotope(QObject *parent, int mass, int charge, bignumber quantity) : QO
  */
 void isotope::initModel()
 {
-    if(!createConnection())
+    /*if(!createConnection())
     {
         qDebug("FATAL! CREATECONNECTION FAILED!");
     }
-    isotDB = QSqlDatabase::addDatabase("QSQLITE");
-    isotDB.setDatabaseName("isotopes.gdb");
-    isotDB.open();
-    model = new QSqlTableModel(0,isotDB);
-
-    model->setTable("isotopes");
-    model->setEditStrategy(QSqlTableModel::OnManualSubmit);
-    qDebug() << model->select();
-
-    qDebug() << model->setHeaderData(0, Qt::Horizontal, QObject::tr("ID"));
-    qDebug() << model->setHeaderData(1, Qt::Horizontal, QObject::tr("Name"));
-    qDebug() << model->setHeaderData(2, Qt::Horizontal, QObject::tr("Mass"));
-    qDebug() << model->setHeaderData(3, Qt::Horizontal, QObject::tr("Charge"));
-    qDebug() << model->setHeaderData(4, Qt::Horizontal, QObject::tr("Half-life period"));
-    qDebug() << model->setHeaderData(5, Qt::Horizontal, QObject::tr("Alpha decay probability"));
-    qDebug() << model->setHeaderData(6, Qt::Horizontal, QObject::tr("Beta decay probability"));
+    db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName("isotopes.gdb");
+    db.open();*/
+    db = QSqlDatabase::addDatabase("QSQLITE");
+    //db.setDatabaseName("isotopes.gdb");
+    //db.open();
+    db.setDatabaseName("isotopes.gdb");
+    db.open();
 }
 
 /*!
@@ -76,15 +69,17 @@ void isotope::initModel()
  */
 bool isotope::isIso(int mass, int charge)
 {
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setHostName("iSotopeServer");
-    db.setDatabaseName("isotopes.gdb");
-    db.open();
-    QSqlQuery qr(db);
 
-    QString request = "SELECT 'Name' FROM 'isotopes' WHERE 'ID' = " + QString::number(mass) + "0" + QString::number(charge);
 
-    if(qr.exec()) //! или стоит проверять пуста ли запись? Просто само по себе выполнение никаких проблем не имеет, другое дело что результат никакой
+    QString request = "SELECT name FROM 'isotopes' WHERE id = " + QString::number(mass) + "0" + QString::number(charge) + "0";
+
+    //db = QSqlDatabase::addDatabase("QSQLITE");
+    //db.setDatabaseName("isotopes.gdb");
+    //db.open();
+
+    QSqlQuery qr(request,db);
+
+    if(qr.first()) // или стоит проверять пуста ли запись? Просто само по себе выполнение никаких проблем не имеет, другое дело что результат никакой
     {
         return true;
     }
@@ -104,10 +99,13 @@ bool isotope::isIso(int mass, int charge)
     (кажется, что не приступать сразу к 3 в среднем экономней, ведь таких изотопов не то чтобы много.
     При этом, если оставить только 3, програма по функциональности не потеряет ничего)
 
+    P.S. вместо 2^(t/T) исользуется выражение e^(t/T*ln2), потому что операция поднесения bignumber не к целому числу не реализована, а я манал пока
+
  */
 QPair < QVector<isotope> , bignumber> isotope::doDecays(bignumber iterTime)
 {
-    bignumber newQuantity = isoQuantity * base2.Pow(iterTime/_halflife);//! isoQuantity* 2 ^ (iterTime/_halflife)
+    bignumber newQuantity = isoQuantity * ttmath::Exp(- iterTime/_halflife * M_LN2); // isoQuantity* 2 ^ (iterTime/_halflife) (2^x = e^(x*ln2)))
+
 
     bignumber decN = isoQuantity - newQuantity;
 
@@ -117,7 +115,7 @@ QPair < QVector<isotope> , bignumber> isotope::doDecays(bignumber iterTime)
         if(isIso(_mass,_charge+1))
         {
         QVector <isotope> vc;
-        vc.push_back((isotope(0,_mass,_charge+1,decN)));
+        vc.push_back((isotope(_mass,_charge+1,decN)));
         return QPair < QVector<isotope>, bignumber> (vc , decN); // return new isotope
         }
         else
@@ -133,7 +131,7 @@ QPair < QVector<isotope> , bignumber> isotope::doDecays(bignumber iterTime)
         if(isIso(_mass-4,_charge-2))
         {
         QVector <isotope> vc;
-        vc.push_back(isotope(0,_mass-4,_charge-2,decN));
+        vc.push_back(isotope(_mass-4,_charge-2,decN));
         return QPair < QVector<isotope>, bignumber> (vc , decN);  // return new isotope
         }
         else
@@ -149,11 +147,11 @@ QPair < QVector<isotope> , bignumber> isotope::doDecays(bignumber iterTime)
         QVector <isotope> vc;
         if(isIso(_mass,_charge+1))
         {
-        vc.push_back((isotope(0,_mass,_charge+1,decN*_alpha_pr)));
+        vc.push_back((isotope(_mass,_charge+1,decN*_alpha_pr)));
         }
         if(isIso(_mass-4,_charge-2))
         {
-        vc.push_back(isotope(0,_mass-4,_charge-2,decN*_beta_pr));
+        vc.push_back(isotope(_mass-4,_charge-2,decN*_beta_pr));
         }
         return QPair < QVector<isotope>, bignumber> (vc , decN);
     }

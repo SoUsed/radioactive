@@ -12,6 +12,10 @@
 radioactivemix::radioactivemix(QObject *parent) : QObject(parent)
 {
     currentlifetime=0;
+    dots_to_save.setFileName("dots.txt");
+    dots_to_save.open(QIODevice::ReadWrite | QIODevice::Text);
+    dots_to_save.remove();
+    dots_to_save.open(QIODevice::ReadWrite | QIODevice::Text);
 }
 
 /*!
@@ -70,14 +74,20 @@ bignumber radioactivemix::doDecays(bignumber iterTime)
             addIso(decRes.first[j],newList);
         }
     }
+    isotope_list = newList;
+    currentlifetime+=iterTime;
+    addDot(currentlifetime,decays);
 }
 
 /*!
-     Функция, которая записывает пару значений "кол-во распадов", "время" в бд, для последующей обработки, передачи в python скрипт и вывода на график по окончанию вычислений
+     Функция, которая записывает пару значений "кол-во распадов", "время" в файл, для последующей обработки, передачи в python скрипт и вывода на график по окончанию вычислений
 
  */
 void radioactivemix::addDot(bignumber time, bignumber qua)
 {
-    //
+    QTextStream dots_qts(&dots_to_save);
+    QString quaSRounded = QString::fromStdString(qua.ToString());
+    quaSRounded = quaSRounded.split(".")[0];
+    dots_qts << QString::fromStdString(time.ToString()) + " " + quaSRounded << "\n";
     return;
 }
