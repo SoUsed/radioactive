@@ -714,10 +714,9 @@ void radioactive::deleteChosenRM_fun()
 
 void radioactive::doComputations()
 {
-    newLog("Computations started");
-
     statusLabel->setStyleSheet("QLabel { background-color : red; color : black; }");
     statusLabel->setText("Status: Computing...");
+    newLog("Computations started");
 
     for(bignumber t=0;t<quantityOfIter;t++)
     {
@@ -726,11 +725,51 @@ void radioactive::doComputations()
     refreshIsoTable();
     newLog("Computations finished");
 
-    //statusLabel->setStyleSheet("QLabel { background-color : orange; color : black; }");
-    //statusLabel->setText("Status: Transfering data to graph...");
+    statusLabel->setStyleSheet("QLabel { background-color : orange; color : black; }");
+    statusLabel->setText("Status: Transfering data to graph...");
 
     //show graph here
+    showGraph();
 
     statusLabel->setStyleSheet("QLabel { background-color : green; color : black; }");
     statusLabel->setText("Status: Ready");
+}
+// 2560000000000000000000000
+
+void radioactive::showGraph()
+{
+    newLog("Making graph...");
+    QFile readDots;
+    readDots.setFileName("dots.txt");
+    readDots.open(QIODevice::ReadOnly | QIODevice::Text);
+    QLineSeries *ser = new QLineSeries();
+
+    QTextStream inD(&readDots);
+    while(!inD.atEnd())
+    {
+        QString nL = readDots.readLine();
+        //newLog("Adding " + nL + " to series");
+        ser->append(nL.split(" ")[0].toLongLong(),nL.split(" ")[1].toLongLong());
+    }
+
+    mainChart->createDefaultAxes();
+    mainChart->addSeries(ser);
+
+
+    //add axis to the chart
+    QValueAxis *axisX = new QValueAxis;
+    //axisX->setTickCount(10);
+    axisX->setTitleText("Time");
+    mainChart->addAxis(axisX, Qt::AlignBottom);
+    ser->attachAxis(axisX);
+
+    QValueAxis *axisY = new QValueAxis;
+    //axisY->setLabelFormat("%i");
+    axisY->setTitleText("Activity");
+    mainChart->addAxis(axisY, Qt::AlignLeft);
+    ser->attachAxis(axisY);
+
+    mainChartView->setRenderHint(QPainter::Antialiasing);
+
+    newLog("Graph done?..");
 }

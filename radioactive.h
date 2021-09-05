@@ -204,6 +204,8 @@ public:
     //! обьект radioactivemix, над которым будут проводится все действия
     radioactivemix *theMix;
 
+    void showGraph();
+
 private:
     Ui::radioactive *ui;
 
