@@ -1,28 +1,28 @@
-#radioactive
+# radioactive
 
-##Setting up the project
+## Setting up the project
 
-###QtCreator 6.1.2 (6.0.0+ needed)
+### QtCreator 6.1.2 (6.0.0+ needed)
 qt.io/download
 
-###ttmath
+### ttmath
 (put the folder ttmath into project directory)
 
 https://www.ttmath.org/_download
 
-###cufflinks
+### cufflinks
 pip command:
 
 ```pip install cufflinks```
 
-###Possibilities
+### Possibilities
 Model decay process of any radioactive mix by time
 
 Track parameters of radioactive decay
 
 Visualize data about radioactive mix by time
 
-###Goals
+### Goals
 Create an instrument to model information about radioactive decay by time at any precision level
 
 Explore the behavior and parameters of entire radioactive mix
