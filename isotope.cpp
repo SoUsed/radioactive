@@ -1,5 +1,4 @@
 #include "isotope.h"
-#include "connectisotopedb.h"
 
 #include <QDebug>
 

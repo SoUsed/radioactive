@@ -26,6 +26,7 @@
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QMenu>
+#include <QThread>
 
 /*!
     \brief Класс, в котором реализован интерфейс и контроллер
@@ -714,14 +715,28 @@ void radioactive::deleteChosenRM_fun()
 
 void radioactive::doComputations()
 {
+    mixThread = new QThread;
+    theMix->moveToThread(mixThread);
     statusLabel->setStyleSheet("QLabel { background-color : red; color : black; }");
     statusLabel->setText("Status: Computing...");
     newLog("Computations started");
 
-    for(bignumber t=0;t<quantityOfIter;t++)
-    {
-        theMix->doDecays(singleIterTime);
-    }
+    theMix->setDecayData(singleIterTime,quantityOfIter);
+
+    connect(mixThread, SIGNAL(started()), theMix, SLOT(doNumOfDecays()));
+
+    connect(theMix, SIGNAL(decaysFinished()), this, SLOT(computationsFinished()));
+
+    mixThread->start();
+
+}
+
+void radioactive::computationsFinished()
+{
+    theMix->moveToThread(QThread::currentThread());
+    mixThread->quit();
+    mixThread->deleteLater();
+
     refreshIsoTable();
     newLog("Computations finished");
 
@@ -734,7 +749,6 @@ void radioactive::doComputations()
     statusLabel->setStyleSheet("QLabel { background-color : green; color : black; }");
     statusLabel->setText("Status: Ready");
 }
-// 2560000000000000000000000
 
 void radioactive::showGraph()
 {

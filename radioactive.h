@@ -36,6 +36,8 @@ class radioactive : public QWidget
 {
     Q_OBJECT
 
+    QThread *mixThread;
+
 public:
     radioactive(QWidget *parent = nullptr);
     ~radioactive();
@@ -230,6 +232,7 @@ public slots:
 
     //comp
     void doComputations();
+    void computationsFinished();
 
 };
 #endif // RADIOACTIVE_H

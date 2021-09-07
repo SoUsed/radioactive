@@ -59,7 +59,7 @@ void radioactivemix::addIso(isotope iso, QVector <isotope> & list)
     Возвращает кол-во произведенных за итерацию распадов, для возможности последующей передачи в addDot()
 
  */
-bignumber radioactivemix::doDecays(bignumber iterTime)
+void radioactivemix::doDecays(bignumber iterTime)
 {
     QVector <isotope> newList;
     bignumber decays = 0;
@@ -90,4 +90,34 @@ void radioactivemix::addDot(bignumber time, bignumber qua)
     quaSRounded = quaSRounded.split(".")[0];
     dots_qts << QString::fromStdString(time.ToString()) + " " + quaSRounded << "\n";
     return;
+}
+
+void radioactivemix::doNumOfDecays()
+{
+    doDo=true;
+    if(!createConnection())
+    {
+        qDebug()<< "FATAL! CREATECONNECTION FAILED!";
+    }
+    db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName("isotopes.gdb");
+    db.open();
+    qDebug()<<"Doing stuff";
+    ticker=0;
+    while(ticker<quantityOfIter)
+    {
+        if(!doDo)
+        {
+            break;
+        }
+        doDecays(iterTime);
+        ticker++;
+    }
+    emit decaysFinished();
+}
+
+void radioactivemix::setDecayData(bignumber timeOfIter, bignumber iterquantity)
+{
+    iterTime = timeOfIter;
+    quantityOfIter = iterquantity;
 }

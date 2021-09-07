@@ -6,6 +6,7 @@
 #include <QDebug>
 
 #include "ttmath/ttmath.h"
+#include "connectisotopedb.h"
 
 typedef ttmath::Big<TTMATH_BITS(64), TTMATH_BITS(256)> bignumber;
 
