@@ -27,9 +27,10 @@ class plotview(QtWidgets.QWidget):
         cf.go_offline
         init_notebook_mode(connected = True)
         df = pd.DataFrame({'Activity':self.graphActivityData},index=self.graphTimeData)
+        #df.head()
         print(df)
         print("bfr")
-        df.iplot()
+        df.plot()
         print("afr")
 
 
@@ -39,7 +40,7 @@ if __name__ == "__main__":
     
     app = QtWidgets.QApplication([])
     pv = plotview()
-    pv.show()
+    #pv.show()
     pv.show_graph()
     app.exec()
     
