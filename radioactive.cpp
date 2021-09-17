@@ -209,7 +209,16 @@ void radioactive::createEditGroup()
     statusLabel->setAlignment(Qt::AlignCenter);
     statusLabel->setStyleSheet("QLabel { background-color : green; color : black; }");
 
-    eGB->addWidget(statusLabel,5,3);
+    eGB->addWidget(statusLabel,3,3);
+
+    stopIter = new QPushButton("Stop Iterations");
+    connect(stopIter, SIGNAL(clicked()), this, SLOT(abortComputations()));
+
+    eGB->addWidget(stopIter,5,3);
+
+    computationsStatsLabel = new QLabel("");
+
+    eGB->addWidget(computationsStatsLabel,4,3);
 
     eGB->setColumnStretch(1,4);
     eGB->setColumnStretch(2,12);
@@ -619,6 +628,10 @@ void radioactive::getMainLog()
     QMessageBox::information(0,"Log of current execution",logg);
 }
 
+/*!
+    Слот на нажатие кнопки setSingleIterTime. Устанавливает время одной итерации (условное)
+
+ */
 void radioactive::setSingleIterTime_fun()
 {
     singleIterTime = bignumber(timeOfIteration->toPlainText().toStdString());
@@ -629,6 +642,10 @@ void radioactive::setSingleIterTime_fun()
 
 }
 
+/*!
+    Слот на нажатие кнопки setNumOfIter. Устанавливает количество итераций
+
+ */
 void radioactive::setNumOfIter_fun()
 {
     quantityOfIter = bignumber(numOfIter->toPlainText().toStdString());
@@ -638,11 +655,19 @@ void radioactive::setNumOfIter_fun()
     // units TBC
 }
 
+/*!
+    Слот на нажатие кнопки setGraphUnits. Устанавливает единицы измерения на графике
+
+ */
 void radioactive::setGraphUnits_fun()
 {
     tableGraphUnits->setText(graphUnitsBox->currentText());
 }
 
+/*!
+    Обновляет данные в таблице текущей смеси (после модификации theMix)
+
+ */
 void radioactive::refreshIsoTable()
 {
     rmTable->clearContents();
@@ -683,6 +708,10 @@ void radioactive::refreshIsoTable()
     }
 }
 
+/*!
+    Слот на нажатие кнопки deleteAllRM. Очищает theMix
+
+ */
 void radioactive::deleteAllRM_fun()
 {
     rmTable->clearContents();
@@ -695,6 +724,10 @@ void radioactive::deleteAllRM_fun()
     theMix = new radioactivemix;
 }
 
+/*!
+    Слот на нажатие кнопки deleteChosenRM. Убирает выбранную на таблице запись из theMix
+
+ */
 void radioactive::deleteChosenRM_fun()
 {
     int currow = rmTable->currentRow();
@@ -713,6 +746,10 @@ void radioactive::deleteChosenRM_fun()
     refreshIsoTable();
 }
 
+/*!
+    Запускает вычисления для theMix и заданных параметров. Вычисления отделяются в поток mixThread
+
+ */
 void radioactive::doComputations()
 {
     mixThread = new QThread;
@@ -731,6 +768,10 @@ void radioactive::doComputations()
 
 }
 
+/*!
+    Слот на окончание вычислений. Выводит theMix обратно в главный поток и обновляет данные
+
+ */
 void radioactive::computationsFinished()
 {
     theMix->moveToThread(QThread::currentThread());
@@ -750,6 +791,10 @@ void radioactive::computationsFinished()
     statusLabel->setText("Status: Ready");
 }
 
+/*!
+    Функция вывода графика
+
+ */
 void radioactive::showGraph()
 {
     newLog("Making graph...");
@@ -785,5 +830,21 @@ void radioactive::showGraph()
 
     mainChartView->setRenderHint(QPainter::Antialiasing);
 
-    newLog("Graph done?..");
+    newLog("Graph done (QWidgets)");
+
+    QStringList grArg { "plotview.py"};
+    QProcess graphProcess;
+    graphProcess.start("python", grArg);
+    graphProcess.waitForFinished();
+
+    newLog("Graph done? (python)");
+}
+
+/*!
+    Слот на нажатие кнопки stopIter. Ставит флажок, используемый внутри theMix на false, прерывает вычисления
+
+ */
+void radioactive::abortComputations()
+{
+    theMix->doDo = false;
 }

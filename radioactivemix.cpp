@@ -92,6 +92,11 @@ void radioactivemix::addDot(bignumber time, bignumber qua)
     return;
 }
 
+/*!
+    Функция, которая проводит распады для радиоактивной смеси.
+    Является слотом на сигнал о начале работы потока для вычислений
+
+ */
 void radioactivemix::doNumOfDecays()
 {
     doDo=true;
@@ -116,6 +121,11 @@ void radioactivemix::doNumOfDecays()
     emit decaysFinished();
 }
 
+/*!
+    Передает параметры о будущих вычислениях в смесь из интерфейса. Вызов предшествует вызову doNumOfDecays.
+    Нужна просто, чтобы ничего не тянуть в doNumOfDecays
+
+ */
 void radioactivemix::setDecayData(bignumber timeOfIter, bignumber iterquantity)
 {
     iterTime = timeOfIter;

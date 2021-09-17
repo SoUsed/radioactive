@@ -36,6 +36,7 @@ class radioactive : public QWidget
 {
     Q_OBJECT
 
+    //! поток, в который отделяется theMix на время вычислений
     QThread *mixThread;
 
 public:
@@ -149,6 +150,9 @@ public:
 
     QPushButton *deleteAllRM;
     QPushButton *deleteChosenRM;
+    QPushButton *stopIter;
+
+    QLabel *computationsStatsLabel;
 
     QLabel *statusLabel;
 
@@ -163,6 +167,7 @@ public:
     //QAction *yearsGraph;
     //
 
+    //! Таблица, в которую записываются параметры вычислений
     QTableWidget *pgTable;
     QTableWidgetItem *tableSingleIter;
     QTableWidgetItem *tableNumOfIter;
@@ -233,6 +238,8 @@ public slots:
     //comp
     void doComputations();
     void computationsFinished();
+
+    void abortComputations();
 
 };
 #endif // RADIOACTIVE_H

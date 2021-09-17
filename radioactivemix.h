@@ -11,6 +11,10 @@ class radioactivemix : public QObject
     //! текущее время жизни смеси. Используется для построения графика от времени
     bignumber currentlifetime;
 
+    //
+    bignumber iterTime;
+    bignumber quantityOfIter;
+
 public:
     explicit radioactivemix(QObject *parent = nullptr);
 
@@ -19,14 +23,27 @@ public:
 
     void addIso(isotope iso, QVector <isotope> & list);
 
-    bignumber doDecays(bignumber iterTime=0);
+    void doDecays(bignumber iterTime=0);
 
     void addDot(bignumber time, bignumber qua);
 
     QFile dots_to_save;
 
+    void setDecayData(bignumber timeOfIter=0,bignumber iterquantity=0);
+
+    QSqlDatabase db;
+
+    //! Флажок для прерывания вычислений из интерфейса
+    bool doDo;
+
+    //! переменная, в которую записывается количество проделанных операций. Нужна для отслеживания скорости вычислений
+    bignumber ticker;
 
 signals:
+    void decaysFinished();
+
+public slots:
+    void doNumOfDecays();
 
 };
 
