@@ -39,6 +39,8 @@ public:
     //! переменная, в которую записывается количество проделанных операций. Нужна для отслеживания скорости вычислений
     bignumber ticker;
 
+    QThread *mainThread;
+
 signals:
     void decaysFinished();
 

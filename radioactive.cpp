@@ -66,7 +66,7 @@ radioactive::radioactive(QWidget *parent)
     newLog("SQL DB initialized");
 
 
-    QVBoxLayout *mainLayout = new QVBoxLayout;
+    mainLayout = new QVBoxLayout;
 
     mainLayout->setMenuBar(menuBar);
 
@@ -78,6 +78,10 @@ radioactive::radioactive(QWidget *parent)
     setLayout(mainLayout);
 
     theMix = new radioactivemix;
+    quantityOfIter.SetZeroNan();
+    singleIterTime.SetZeroNan();
+
+    theMix->mainThread = QThread::currentThread();
 }
 
 radioactive::~radioactive()
@@ -257,10 +261,10 @@ void radioactive::createProcessGroup()
     unitsIteration->setPlaceholderText("Choose units");
 
     unitsIteration->addItem("seconds");
-    //unitsIteration->addItem("minutes");
-    //unitsIteration->addItem("hours");
-    //unitsIteration->addItem("days");
-    //unitsIteration->addItem("years");
+    unitsIteration->addItem("minutes");
+    unitsIteration->addItem("hours");
+    unitsIteration->addItem("days");
+    unitsIteration->addItem("years");
 
     pGB->addWidget(unitsIteration,3,1);
 
@@ -321,11 +325,11 @@ void radioactive::createProcessGroup()
     unitsOfIter->setPlaceholderText("Choose units");
 
     unitsOfIter->addItem("times");
-    //unitsOfIter->addItem("seconds");
-    //unitsOfIter->addItem("minutes");
-    //unitsOfIter->addItem("hours");
-    //unitsOfIter->addItem("days");
-    //unitsOfIter->addItem("years");
+    unitsOfIter->addItem("seconds");
+    unitsOfIter->addItem("minutes");
+    unitsOfIter->addItem("hours");
+    unitsOfIter->addItem("days");
+    unitsOfIter->addItem("years");
 
     pGB->addWidget(unitsOfIter,3,2);
 
@@ -634,12 +638,36 @@ void radioactive::getMainLog()
  */
 void radioactive::setSingleIterTime_fun()
 {
-    singleIterTime = bignumber(timeOfIteration->toPlainText().toStdString());
-    // units TBC
+    if(unitsIteration->currentIndex()==-1)
+    {
+        newLog("Modify error: Units not chosen");
+        QMessageBox::critical(0,"Error!","Choose units");
+        return;
+    }
+    if(unitsIteration->currentIndex()==0)
+    {
+        singleIterTime = bignumber(timeOfIteration->toPlainText().toStdString());
+        tableSingleIter->setText(timeOfIteration->toPlainText() + " " + "seconds");
+        return;
+    }
+    else if(unitsIteration->currentIndex()==1)
+    {
+        singleIterTime = bignumber(timeOfIteration->toPlainText().toStdString())*60;
+    }
+    else if(unitsIteration->currentIndex()==2)
+    {
+        singleIterTime = bignumber(timeOfIteration->toPlainText().toStdString())*3600;
+    }
+    else if(unitsIteration->currentIndex()==3)
+    {
+        singleIterTime = bignumber(timeOfIteration->toPlainText().toStdString())*86400;
+    }
+    else if(unitsIteration->currentIndex()==4)
+    {
+        singleIterTime = bignumber(timeOfIteration->toPlainText().toStdString())*31557600;
+    }
 
-    tableSingleIter->setText(timeOfIteration->toPlainText() + " " + "seconds");
-    // units TBC
-
+    tableSingleIter->setText(timeOfIteration->toPlainText() + " " + unitsIteration->currentText() + " | " + QString::fromStdString(singleIterTime.ToString()) + " seconds");
 }
 
 /*!
@@ -648,10 +676,42 @@ void radioactive::setSingleIterTime_fun()
  */
 void radioactive::setNumOfIter_fun()
 {
-    quantityOfIter = bignumber(numOfIter->toPlainText().toStdString());
+    if(unitsOfIter->currentIndex()==-1)
+    {
+        newLog("Modify error: Units not chosen");
+        QMessageBox::critical(0,"Error!","Choose units");
+        return;
+    }
+    if(unitsOfIter->currentIndex()==0)
+    {
+        quantityOfIter = bignumber(numOfIter->toPlainText().toStdString());
+        tableNumOfIter->setText(numOfIter->toPlainText() + " " + unitsOfIter->currentText());
+        return;
+    }
+    else if(unitsOfIter->currentIndex()==1) // Num of iterations is in secs
+    {
+        quantityOfIter = bignumber((numOfIter)->toPlainText().toStdString())/singleIterTime;
+    }
+    else if(unitsOfIter->currentIndex()==2) // Num of iterations is in mins
+    {
+            quantityOfIter = (bignumber((numOfIter)->toPlainText().toStdString())/singleIterTime)*60;
+    }
+    else if(unitsOfIter->currentIndex()==3) // Num of iterations is in hours
+    {
+            quantityOfIter = (bignumber((numOfIter)->toPlainText().toStdString())/singleIterTime)*3600;
+    }
+    else if(unitsOfIter->currentIndex()==4) // Num of iterations is in days
+    {
+            quantityOfIter = (bignumber((numOfIter)->toPlainText().toStdString())/singleIterTime)*86400;
+    }
+    else if(unitsOfIter->currentIndex()==5) // Num of iterations is in years
+    {
+            quantityOfIter = (bignumber((numOfIter)->toPlainText().toStdString())/singleIterTime)*31557600;
+    }
+    quantityOfIter.Round();
     // units TBC
 
-    tableNumOfIter->setText(numOfIter->toPlainText() + " " + "times");
+    tableNumOfIter->setText(numOfIter->toPlainText() + " " + unitsOfIter->currentText() + " | " + QString::fromStdString(quantityOfIter.ToString()) + " times");
     // units TBC
 }
 
@@ -752,6 +812,12 @@ void radioactive::deleteChosenRM_fun()
  */
 void radioactive::doComputations()
 {
+    newLog("Starting computations");
+    if(!programmReadiness())
+    {
+        newLog("Failed to start computations");
+        return;
+    }
     mixThread = new QThread;
     theMix->moveToThread(mixThread);
     statusLabel->setStyleSheet("QLabel { background-color : red; color : black; }");
@@ -764,6 +830,14 @@ void radioactive::doComputations()
 
     connect(theMix, SIGNAL(decaysFinished()), this, SLOT(computationsFinished()));
 
+    timeElapsed=0;
+    currentTick=0;
+    compTimer.setInterval(200);
+
+    connect(&compTimer, SIGNAL(timeout()), this, SLOT(updateSpeedStats()));
+    localFlagTimer = true;
+    compTimer.start();
+
     mixThread->start();
 
 }
@@ -774,9 +848,14 @@ void radioactive::doComputations()
  */
 void radioactive::computationsFinished()
 {
-    theMix->moveToThread(QThread::currentThread());
+    //theMix->moveToThread(QThread::currentThread());
+    //theMix->moveToThread(QCoreApplication::instance()->thread());
     mixThread->quit();
     mixThread->deleteLater();
+
+    compTimer.stop();
+    localFlagTimer=false;
+    updateSpeedStats();
 
     refreshIsoTable();
     newLog("Computations finished");
@@ -797,6 +876,17 @@ void radioactive::computationsFinished()
  */
 void radioactive::showGraph()
 {
+    getGraphUnitsDiv();
+    if(mainChart->series().size())
+    {
+        newLog("Deleting an old graph");
+        plotWidget->deleteLater();
+        mainChart->deleteLater();
+        mainChartView->deleteLater();
+        createPlot();
+        mainLayout->insertWidget(0,plotWidget,4);
+    }
+
     newLog("Making graph...");
     QFile readDots;
     readDots.setFileName("dots.txt");
@@ -808,7 +898,7 @@ void radioactive::showGraph()
     {
         QString nL = readDots.readLine();
         //newLog("Adding " + nL + " to series");
-        ser->append(nL.split(" ")[0].toLongLong(),nL.split(" ")[1].toLongLong());
+        ser->append(nL.split(" ")[0].toDouble()/graphUnitsDivider,nL.split(" ")[1].toLongLong());
     }
 
     mainChart->createDefaultAxes();
@@ -818,7 +908,7 @@ void radioactive::showGraph()
     //add axis to the chart
     QValueAxis *axisX = new QValueAxis;
     //axisX->setTickCount(10);
-    axisX->setTitleText("Time");
+    axisX->setTitleText("Time (" + tableGraphUnits->text() + ")");
     mainChart->addAxis(axisX, Qt::AlignBottom);
     ser->attachAxis(axisX);
 
@@ -847,4 +937,73 @@ void radioactive::showGraph()
 void radioactive::abortComputations()
 {
     theMix->doDo = false;
+}
+
+bool radioactive::programmReadiness()
+{
+    bool flag = true;
+    newLog("Checking isotope list size: " + QString::number(theMix->isotope_list.size()));
+    if(!theMix->isotope_list.size())
+    {
+        newLog("Computations error: empty mix");
+        QMessageBox::critical(0,"Error!","Computations error: empty mix",QMessageBox::Cancel);
+        flag = false;
+    }
+    newLog("Checking number of iterations: " + QString::fromStdString(quantityOfIter.ToString()));
+    if(quantityOfIter.IsNan())
+    {
+        newLog("Computations error: number of iteraions is NaN");
+        QMessageBox::critical(0,"Error!","Computations error: number of iteraions is NaN",QMessageBox::Cancel);
+        flag = false;
+    }
+    newLog("Checking iteration time: " + QString::fromStdString(singleIterTime.ToString()));
+    if(singleIterTime.IsNan())
+    {
+        newLog("Computations error: iteraion time is NaN");
+        QMessageBox::critical(0,"Error!","Computations error: iteration time is NaN",QMessageBox::Cancel);
+        flag = false;
+    }
+    return flag;
+}
+
+/*!
+ Передает в radioactivemix данные о единицах времени для графика.
+ */
+void radioactive::getGraphUnitsDiv()
+{
+    if(tableGraphUnits->text()=="seconds")
+    {
+        graphUnitsDivider = 1;
+    }
+    else if(tableGraphUnits->text()=="minutes")
+    {
+        graphUnitsDivider = 60;
+    }
+    else if(tableGraphUnits->text()=="hours")
+    {
+        graphUnitsDivider = 3600;
+    }
+    else if(tableGraphUnits->text()=="days")
+    {
+        graphUnitsDivider = 86400;
+    }
+    else if(tableGraphUnits->text()=="years")
+    {
+        graphUnitsDivider = 31557600;
+    }
+}
+
+void radioactive::updateSpeedStats()
+{
+    int dif = theMix->ticker.ToInt() - currentTick;
+    currentTick = theMix->ticker.ToInt();
+    timeElapsed += 200;
+    double percentage = (double(currentTick)/quantityOfIter.ToInt())*100;
+    float avgSpeed = double(currentTick)/timeElapsed*60000;
+    computationsStatsLabel->setText(QString::number(percentage,'g',3) + "% | " + QString::number(300*dif) + "/min (" +
+                                    QString::number(avgSpeed) + "/min)");
+    if(theMix->doDo && localFlagTimer)
+    {
+        compTimer.start();
+    }
 }

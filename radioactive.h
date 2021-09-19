@@ -22,6 +22,7 @@
 #include <QMessageBox>
 #include <QTableWidget>
 #include <QTableWidgetItem>
+#include <QTimer>
 #include "ttmath/ttmath.h"
 
 #include "radioactivemix.h"
@@ -39,6 +40,11 @@ class radioactive : public QWidget
     //! поток, в который отделяется theMix на время вычислений
     QThread *mixThread;
 
+    int timeElapsed;
+    int currentTick;
+    QTimer compTimer;
+    bool localFlagTimer;
+
 public:
     radioactive(QWidget *parent = nullptr);
     ~radioactive();
@@ -54,6 +60,8 @@ public:
     //
 
     /// Interface
+
+    QVBoxLayout *mainLayout;
 
     // main menu
     void createMenu();
@@ -211,7 +219,11 @@ public:
     //! обьект radioactivemix, над которым будут проводится все действия
     radioactivemix *theMix;
 
+    bool programmReadiness();
+
     void showGraph();
+    void getGraphUnitsDiv();
+    int graphUnitsDivider;
 
 private:
     Ui::radioactive *ui;
@@ -239,6 +251,7 @@ public slots:
     void doComputations();
     void computationsFinished();
 
+    void updateSpeedStats();
     void abortComputations();
 
 };

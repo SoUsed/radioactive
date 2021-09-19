@@ -118,6 +118,7 @@ void radioactivemix::doNumOfDecays()
         doDecays(iterTime);
         ticker++;
     }
+    this->moveToThread(mainThread);
     emit decaysFinished();
 }
 
