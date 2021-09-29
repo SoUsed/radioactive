@@ -96,7 +96,6 @@ QPair < QVector<equalIsoData> , bignumber> isotope::doDecays(bignumber iterTime)
     // также предусматриваем сценарий множественного распада (который выполняется вдвое медленней)
     else
     {
-        QVector <equalIsoData> vc;
         isoQuantity = newQuantity;
         if(isIso(_mass-4,_charge-2)) // проверяем, является ли продукт альфа-распада изотопом
         {
