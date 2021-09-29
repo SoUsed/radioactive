@@ -10,10 +10,8 @@
 
 typedef ttmath::Big<TTMATH_BITS(64), TTMATH_BITS(256)> bignumber;
 
-
 class isotope
 {
-
     // data to be got from db
     //! Заряд ядра. В паре с массой является уникальным идентификатором
     int _charge;
@@ -22,18 +20,14 @@ class isotope
     int _mass;
 
     //! Табличное значение: вероятность того, что нестабильный элемент совершит альфа-распад
-    double _alpha_pr;
+    float _alpha_pr;
 
     //! Табличное значение: вероятность того, что нестабильный элемент совершит бета-распад
-    double _beta_pr;
+    float _beta_pr;
 
     //! Табличное значение: период полураспада
     bignumber _halflife;
     //
-
-
-
-
 
 public:
 
@@ -64,7 +58,6 @@ public:
     {
         return QPair<int,int>(_mass,_charge);
     }
-
 
 signals:
 

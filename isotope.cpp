@@ -12,21 +12,9 @@ isotope::isotope(int mass, int charge, bignumber quantity)
     _mass = mass;
     _charge = charge;
     isoQuantity = quantity;
-
-
-
-    //initModel();
-
-    QString idStr = QString( QString::number(mass) + "0" + QString::number(charge) + "0");
-
+    QString idStr = QString( QString::number(mass) + "0" + QString::number(charge) + "0"); // формируем id изотопа в бд (определено массой и зарядом)
     QString request = "SELECT halflife,alphaProb,betaProb,name FROM 'isotopes' WHERE id = " + idStr;
-    //db = QSqlDatabase::addDatabase("QSQLITE");
-    //db.setDatabaseName("isotopes.gdb");
-    //db.open();
-
     QSqlQuery qr(request,db);
-
-
     if(qr.first())
     {
         _alpha_pr = qr.value(1).toFloat();
@@ -39,7 +27,10 @@ isotope::isotope(int mass, int charge, bignumber quantity)
         qDebug()<<"SQL FATAL | No Entry for current isotope in database ( "<<mass<<", " << charge << " )" << " id: " << idStr;
     }
 
-
+    QSqlQuery query(db);
+    query.exec("select group_concat(id, ',') from isotopes");
+    query.first();
+    dbIds = query.value(0).toString().split(",");
 }
 
 /*!
@@ -48,16 +39,7 @@ isotope::isotope(int mass, int charge, bignumber quantity)
  */
 void isotope::initModel()
 {
-    /*if(!createConnection())
-    {
-        qDebug("FATAL! CREATECONNECTION FAILED!");
-    }
     db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName("isotopes.gdb");
-    db.open();*/
-    db = QSqlDatabase::addDatabase("QSQLITE");
-    //db.setDatabaseName("isotopes.gdb");
-    //db.open();
     db.setDatabaseName("isotopes.gdb");
     db.open();
 }
@@ -68,22 +50,21 @@ void isotope::initModel()
  */
 bool isotope::isIso(int mass, int charge)
 {
-
-
-    QString request = "SELECT name FROM 'isotopes' WHERE id = " + QString::number(mass) + "0" + QString::number(charge) + "0";
-
-    //db = QSqlDatabase::addDatabase("QSQLITE");
-    //db.setDatabaseName("isotopes.gdb");
-    //db.open();
-
-    QSqlQuery qr(request,db);
-
-    if(qr.first()) // или стоит проверять пуста ли запись? Просто само по себе выполнение никаких проблем не имеет, другое дело что результат никакой
+    QString fId = QString::number(mass) + "0" + QString::number(charge) + "0";
+    for(int i=0;i<dbIds.size();i++)
     {
-        return true;
+        if(fId == dbIds[i])
+        {
+            qDebug()<<"found iso: " << fId << " (" << dbIds[i] << ")";
+            return true;
+        }
+    }
+    qDebug()<<"Didn't found iso: " << fId << " in this list: ";
+    for(int i=0;i<dbIds.size();i++)
+    {
+        qDebug() << dbIds[i];
     }
     return false;
-
 }
 
 /*!
@@ -104,53 +85,39 @@ bool isotope::isIso(int mass, int charge)
 QPair < QVector<isotope> , bignumber> isotope::doDecays(bignumber iterTime)
 {
     bignumber newQuantity = isoQuantity * ttmath::Exp(- iterTime/_halflife * M_LN2); // isoQuantity* 2 ^ (iterTime/_halflife) (2^x = e^(x*ln2)))
-
-
     bignumber decN = isoQuantity - newQuantity;
-
     if(_beta_pr == 1)
     {
-        isoQuantity = newQuantity;
-        if(isIso(_mass,_charge+1))
-        {
         QVector <isotope> vc;
+        isoQuantity = newQuantity;
+        if(isIso(_mass,_charge+1)) // проверяем, является ли продукт распада изотопом
+        {        
         vc.push_back((isotope(_mass,_charge+1,decN)));
+        }
         return QPair < QVector<isotope>, bignumber> (vc , decN); // return new isotope
-        }
-        else
-        {
-            QVector <isotope> vc;
-            return QPair < QVector<isotope>, bignumber> (vc , decN);
-        }
-
     }
     else if(_alpha_pr == 1)
     {
-        isoQuantity = newQuantity;
-        if(isIso(_mass-4,_charge-2))
-        {
         QVector <isotope> vc;
-        vc.push_back(isotope(_mass-4,_charge-2,decN));
-        return QPair < QVector<isotope>, bignumber> (vc , decN);  // return new isotope
-        }
-        else
+        isoQuantity = newQuantity;
+        if(isIso(_mass-4,_charge-2)) // проверяем, является ли продукт распада изотопом
         {
-            QVector <isotope> vc;
-            return QPair < QVector<isotope>, bignumber> (vc , decN);
+        vc.push_back(isotope(_mass-4,_charge-2,decN));
         }
+        return QPair < QVector<isotope>, bignumber> (vc , decN);  // return new isotope
     }
-    // также предусмотреть сценарий множественного распада
+    // также предусматриваем сценарий множественного распада (который выполняется вдвое медленней)
     else
     {
-        isoQuantity = newQuantity;
         QVector <isotope> vc;
-        if(isIso(_mass,_charge+1))
-        {
-        vc.push_back((isotope(_mass,_charge+1,decN*_alpha_pr)));
-        }
+        isoQuantity = newQuantity;
         if(isIso(_mass-4,_charge-2))
         {
-        vc.push_back(isotope(_mass-4,_charge-2,decN*_beta_pr));
+        vc.push_back((isotope(_mass-4,_charge-2,decN*_alpha_pr)));
+        }
+        if(isIso(_mass,_charge+1))
+        {
+        vc.push_back(isotope(_mass,_charge+1,decN*_beta_pr));
         }
         return QPair < QVector<isotope>, bignumber> (vc , decN);
     }

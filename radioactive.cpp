@@ -82,6 +82,8 @@ radioactive::radioactive(QWidget *parent)
     singleIterTime.SetZeroNan();
 
     theMix->mainThread = QThread::currentThread();
+
+    qDebug() << dbIds.size();
 }
 
 radioactive::~radioactive()

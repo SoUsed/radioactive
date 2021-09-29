@@ -99,15 +99,16 @@ void radioactivemix::addDot(bignumber time, bignumber qua)
  */
 void radioactivemix::doNumOfDecays()
 {
+    qDebug() <<dbIds.size();
     doDo=true;
     if(!createConnection())
     {
         qDebug()<< "FATAL! CREATECONNECTION FAILED!";
     }
-    db = QSqlDatabase::addDatabase("QSQLITE");
+    /*db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("isotopes.gdb");
-    db.open();
-    qDebug()<<"Doing stuff";
+    db.open();*/
+    qDebug()<<"Doing stuff" << dbIds.size();
     ticker=0;
     while(ticker<quantityOfIter)
     {
