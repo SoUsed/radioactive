@@ -25,10 +25,9 @@ radioactivemix::radioactivemix(QObject *parent) : QObject(parent)
     Если такой изотоп уже есть, то используется метод addQuantity в уже имеющийся обьект класса, добавляя к нему переданное количество вещества
     Если же нет, то добавляет изотоп в список
 
-    Используется:
-    1) при вызове функции doDecays, для переноса элемнтов в новый список
-    2) при формировании радиоактивной смеси посредством интерфейса
+    Используется при формировании радиоактивной смеси посредством интерфейса
 
+    Оперирует непосредственно с обьектом класса isotope
 
  */
 void radioactivemix::addIso(isotope iso, QVector <isotope> & list)
@@ -53,6 +52,39 @@ void radioactivemix::addIso(isotope iso, QVector <isotope> & list)
 }
 
 /*!
+    \brief Добавляет в смесь некоторое количество радиоактивного изотопа
+
+    Сначала проверяет наличие такого изотопа в смеси уже, чтобы не инициализировать новый обьект класса isotope в случае чего
+    Если такой изотоп уже есть, то используется метод addQuantity в уже имеющийся обьект класса, добавляя к нему переданное количество вещества
+    Если же нет, то добавляет изотоп в список
+
+    Используется при вызове функции doDecays, для переноса элемнтов в новый список
+
+    Оперирует не с обьектом класса isotope, а с минимальным необходимым набором данных о изотопе. Предпологая, что чаще в смеси уже будет добавляемый изотоп,
+    данный метод не создает новый обьект класса isotope до последного, ведь создание обьекта намного медленнее, чем создание equalIsoData внутри doDecays
+ */
+void radioactivemix::addIso(equalIsoData isoData, QVector <isotope> & list)
+{
+    bool checker=false;
+    for(int i=0;i<list.size();i++)
+    {
+        if(isoData.first==list[i].getMC())
+        {
+            list[i].addQuantity(isoData.second);
+            checker=true;
+        }
+        if(checker)
+        {
+            break;
+        }
+    }
+    if(!checker)
+    {
+        list.push_back(isotope(isoData.first.first,isoData.first.second,isoData.second));
+    }
+}
+
+/*!
     \brief Функция, которая реализует распад каждого из элементов радиоактивной смеси
 
     Записывает новую смесь (список) в отдельний список. После итерации новый список замещает старый
@@ -66,7 +98,7 @@ void radioactivemix::doDecays(bignumber iterTime)
 
     for(int i=0;i<isotope_list.size();i++)
     {
-        QPair <QVector<isotope>, bignumber > decRes = isotope_list[i].doDecays(iterTime);
+        QPair <QVector<equalIsoData>, bignumber > decRes = isotope_list[i].doDecays(iterTime);
         decays += decRes.second;
         addIso(isotope_list[i],newList);
         for(int j=0;j<decRes.first.size();j++)
@@ -105,9 +137,6 @@ void radioactivemix::doNumOfDecays()
     {
         qDebug()<< "FATAL! CREATECONNECTION FAILED!";
     }
-    /*db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName("isotopes.gdb");
-    db.open();*/
     qDebug()<<"Doing stuff" << dbIds.size();
     ticker=0;
     while(ticker<quantityOfIter)

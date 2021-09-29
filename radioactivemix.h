@@ -23,6 +23,8 @@ public:
 
     void addIso(isotope iso, QVector <isotope> & list);
 
+    void addIso(equalIsoData isoData, QVector <isotope> & list);
+
     void doDecays(bignumber iterTime=0);
 
     void addDot(bignumber time, bignumber qua);

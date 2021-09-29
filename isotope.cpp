@@ -55,14 +55,8 @@ bool isotope::isIso(int mass, int charge)
     {
         if(fId == dbIds[i])
         {
-            qDebug()<<"found iso: " << fId << " (" << dbIds[i] << ")";
             return true;
         }
-    }
-    qDebug()<<"Didn't found iso: " << fId << " in this list: ";
-    for(int i=0;i<dbIds.size();i++)
-    {
-        qDebug() << dbIds[i];
     }
     return false;
 }
@@ -82,44 +76,46 @@ bool isotope::isIso(int mass, int charge)
     P.S. вместо 2^(t/T) исользуется выражение e^(t/T*ln2), потому что операция поднесения bignumber не к целому числу не реализована, а я манал пока
 
  */
-QPair < QVector<isotope> , bignumber> isotope::doDecays(bignumber iterTime)
+QPair < QVector<equalIsoData> , bignumber> isotope::doDecays(bignumber iterTime)
 {
     bignumber newQuantity = isoQuantity * ttmath::Exp(- iterTime/_halflife * M_LN2); // isoQuantity* 2 ^ (iterTime/_halflife) (2^x = e^(x*ln2)))
     bignumber decN = isoQuantity - newQuantity;
     if(_beta_pr == 1)
     {
-        QVector <isotope> vc;
+        QVector< equalIsoData > vc; // MC элемента(его информация) и кол-во. Такая формация полностью представляет изотоп
+        // Что за страшная структура данных?
+        // Вектор состоит из таких пар: ( (маса,заряд) , кол-во )
         isoQuantity = newQuantity;
         if(isIso(_mass,_charge+1)) // проверяем, является ли продукт распада изотопом
         {        
-        vc.push_back((isotope(_mass,_charge+1,decN)));
+        vc.push_back(equalIsoData(QPair<int,int>(_mass,_charge+1),decN));
         }
-        return QPair < QVector<isotope>, bignumber> (vc , decN); // return new isotope
+        return QPair < QVector<equalIsoData> , bignumber> (vc , decN); // return new isotope
     }
     else if(_alpha_pr == 1)
     {
-        QVector <isotope> vc;
+        QVector <equalIsoData> vc;
         isoQuantity = newQuantity;
         if(isIso(_mass-4,_charge-2)) // проверяем, является ли продукт распада изотопом
         {
-        vc.push_back(isotope(_mass-4,_charge-2,decN));
+        vc.push_back(equalIsoData(QPair<int,int>(_mass-4,_charge-2),decN));
         }
-        return QPair < QVector<isotope>, bignumber> (vc , decN);  // return new isotope
+        return QPair < QVector<equalIsoData> , bignumber> (vc , decN);  // return new isotope
     }
     // также предусматриваем сценарий множественного распада (который выполняется вдвое медленней)
     else
     {
-        QVector <isotope> vc;
+        QVector <equalIsoData> vc;
         isoQuantity = newQuantity;
         if(isIso(_mass-4,_charge-2))
         {
-        vc.push_back((isotope(_mass-4,_charge-2,decN*_alpha_pr)));
+        vc.push_back(equalIsoData(QPair<int,int>(_mass-4,_charge-2),decN*_alpha_pr));
         }
         if(isIso(_mass,_charge+1))
         {
-        vc.push_back(isotope(_mass,_charge+1,decN*_beta_pr));
+        vc.push_back(equalIsoData(QPair<int,int>(_mass,_charge+1),decN*_beta_pr));
         }
-        return QPair < QVector<isotope>, bignumber> (vc , decN);
+        return QPair < QVector<equalIsoData> , bignumber> (vc , decN);
     }
 }
 

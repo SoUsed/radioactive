@@ -9,6 +9,7 @@
 #include "connectisotopedb.h"
 
 typedef ttmath::Big<TTMATH_BITS(64), TTMATH_BITS(256)> bignumber;
+typedef QPair <QPair<int,int>, bignumber> equalIsoData;
 
 class isotope
 {
@@ -47,7 +48,7 @@ public:
     QSqlTableModel *model;
     void initModel();
 
-    QPair < QVector<isotope> , bignumber> doDecays(bignumber iterTime=0);
+    QPair < QVector<equalIsoData> , bignumber> doDecays(bignumber iterTime=0);
 
     void addQuantity(bignumber supplement=0);
 
