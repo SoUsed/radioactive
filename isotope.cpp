@@ -2,6 +2,8 @@
 
 #include <QDebug>
 
+QVector<QString> isotope::dbIds;
+
 /*!
     \brief Класс isotope реализует модель некого количества радиоактивного изотопа, со всеми необходимыми характеристиками
 
@@ -12,6 +14,7 @@ isotope::isotope(int mass, int charge, bignumber quantity)
     _mass = mass;
     _charge = charge;
     isoQuantity = quantity;
+
     QString idStr = QString( QString::number(mass) + "0" + QString::number(charge) + "0"); // формируем id изотопа в бд (определено массой и зарядом)
     QString request = "SELECT halflife,alphaProb,betaProb,name FROM 'isotopes' WHERE id = " + idStr;
     QSqlQuery qr(request,db);
@@ -26,26 +29,12 @@ isotope::isotope(int mass, int charge, bignumber quantity)
     {
         qDebug()<<"SQL FATAL | No Entry for current isotope in database ( "<<mass<<", " << charge << " )" << " id: " << idStr;
     }
-
-    QSqlQuery query(db);
-    query.exec("select group_concat(id, ',') from isotopes");
-    query.first();
-    dbIds = query.value(0).toString().split(",");
 }
 
 /*!
-    Инициализирует модель базы isotopedb
+    \brief Проверяет, явлвяется ли данный элемент радиоактивным.
 
- */
-void isotope::initModel()
-{
-    db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName("isotopes.gdb");
-    db.open();
-}
-
-/*!
-    Проверяет, явлвяется ли данный элемент радиоактивным. Проводит поиск по бд isotopedb
+    Проводит поиск id элемента по списку dbIds (записи, хранимые в переменной, чтобы не обращаться к бд лишний раз)
 
  */
 bool isotope::isIso(int mass, int charge)
@@ -78,45 +67,47 @@ bool isotope::isIso(int mass, int charge)
  */
 QPair < QVector<equalIsoData> , bignumber> isotope::doDecays(bignumber iterTime)
 {
+    QVector< equalIsoData > vc; // MC элемента(его информация) и кол-во. Такая формация полностью представляет изотоп
+    // Что это за страшная структура данных?
+    // Вектор состоит из таких пар: ( (маса,заряд) , кол-во )
+
     bignumber newQuantity = isoQuantity * ttmath::Exp(- iterTime/_halflife * M_LN2); // isoQuantity* 2 ^ (iterTime/_halflife) (2^x = e^(x*ln2)))
     bignumber decN = isoQuantity - newQuantity;
-    if(_beta_pr == 1)
+
+    // Далее присутствует развилка, которая призвана уменьшить время работы алгоритма:
+    // Либо произвести расчеты лишь для альфа/бета распада, или для обеих, если необходимо(что вдвое медленнее)
+
+    if(_beta_pr == 1) // Если совершается лишь бета-распад
     {
-        QVector< equalIsoData > vc; // MC элемента(его информация) и кол-во. Такая формация полностью представляет изотоп
-        // Что за страшная структура данных?
-        // Вектор состоит из таких пар: ( (маса,заряд) , кол-во )
         isoQuantity = newQuantity;
         if(isIso(_mass,_charge+1)) // проверяем, является ли продукт распада изотопом
         {        
         vc.push_back(equalIsoData(QPair<int,int>(_mass,_charge+1),decN));
         }
-        return QPair < QVector<equalIsoData> , bignumber> (vc , decN); // return new isotope
     }
-    else if(_alpha_pr == 1)
+    else if(_alpha_pr == 1) // Если совершается лишь альфа-распад
     {
-        QVector <equalIsoData> vc;
         isoQuantity = newQuantity;
         if(isIso(_mass-4,_charge-2)) // проверяем, является ли продукт распада изотопом
         {
         vc.push_back(equalIsoData(QPair<int,int>(_mass-4,_charge-2),decN));
         }
-        return QPair < QVector<equalIsoData> , bignumber> (vc , decN);  // return new isotope
     }
     // также предусматриваем сценарий множественного распада (который выполняется вдвое медленней)
     else
     {
         QVector <equalIsoData> vc;
         isoQuantity = newQuantity;
-        if(isIso(_mass-4,_charge-2))
+        if(isIso(_mass-4,_charge-2)) // проверяем, является ли продукт альфа-распада изотопом
         {
         vc.push_back(equalIsoData(QPair<int,int>(_mass-4,_charge-2),decN*_alpha_pr));
         }
-        if(isIso(_mass,_charge+1))
+        if(isIso(_mass,_charge+1)) // проверяем, является ли продукт бета-распада изотопом
         {
         vc.push_back(equalIsoData(QPair<int,int>(_mass,_charge+1),decN*_beta_pr));
         }
-        return QPair < QVector<equalIsoData> , bignumber> (vc , decN);
     }
+    return QPair < QVector<equalIsoData> , bignumber> (vc , decN); // return new isotope(s)
 }
 
 /*!

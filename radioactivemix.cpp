@@ -131,13 +131,17 @@ void radioactivemix::addDot(bignumber time, bignumber qua)
  */
 void radioactivemix::doNumOfDecays()
 {
-    qDebug() <<dbIds.size();
     doDo=true;
     if(!createConnection())
     {
         qDebug()<< "FATAL! CREATECONNECTION FAILED!";
     }
-    qDebug()<<"Doing stuff" << dbIds.size();
+
+    QSqlQuery query1(db);
+    query1.exec("select group_concat(id, ',') from isotopes");
+    query1.first();
+    isotope::dbIds = query1.value(0).toString().split(",");
+    qDebug()<<"TheMix | computing!";
     ticker=0;
     while(ticker<quantityOfIter)
     {

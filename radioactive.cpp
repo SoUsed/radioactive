@@ -28,6 +28,7 @@
 #include <QMenu>
 #include <QThread>
 
+
 /*!
     \brief Класс, в котором реализован интерфейс и контроллер
 
@@ -47,8 +48,6 @@ radioactive::radioactive(QWidget *parent)
 
     unlocked = false; // is password unlocked = false
 
-
-
     ui->setupUi(this);
     newLog("App Started");
 
@@ -64,7 +63,6 @@ radioactive::radioactive(QWidget *parent)
 
     initializeModel();
     newLog("SQL DB initialized");
-
 
     mainLayout = new QVBoxLayout;
 
@@ -82,8 +80,6 @@ radioactive::radioactive(QWidget *parent)
     singleIterTime.SetZeroNan();
 
     theMix->mainThread = QThread::currentThread();
-
-    qDebug() << dbIds.size();
 }
 
 radioactive::~radioactive()
@@ -542,15 +538,15 @@ void radioactive::initializeModel()
 
     model->setTable("isotopes");
     model->setEditStrategy(QSqlTableModel::OnManualSubmit);
-    qDebug() << model->select();
+    model->select();
 
-    qDebug() << model->setHeaderData(0, Qt::Horizontal, QObject::tr("ID"));
-    qDebug() << model->setHeaderData(1, Qt::Horizontal, QObject::tr("Name"));
-    qDebug() << model->setHeaderData(2, Qt::Horizontal, QObject::tr("Mass"));
-    qDebug() << model->setHeaderData(3, Qt::Horizontal, QObject::tr("Charge"));
-    qDebug() << model->setHeaderData(4, Qt::Horizontal, QObject::tr("Half-life period"));
-    qDebug() << model->setHeaderData(5, Qt::Horizontal, QObject::tr("Alpha decay probability"));
-    qDebug() << model->setHeaderData(6, Qt::Horizontal, QObject::tr("Beta decay probability"));
+    model->setHeaderData(0, Qt::Horizontal, QObject::tr("ID"));
+    model->setHeaderData(1, Qt::Horizontal, QObject::tr("Name"));
+    model->setHeaderData(2, Qt::Horizontal, QObject::tr("Mass"));
+    model->setHeaderData(3, Qt::Horizontal, QObject::tr("Charge"));
+    model->setHeaderData(4, Qt::Horizontal, QObject::tr("Half-life period"));
+    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Alpha decay probability"));
+    model->setHeaderData(6, Qt::Horizontal, QObject::tr("Beta decay probability"));
 }
 
 /*!
@@ -841,7 +837,6 @@ void radioactive::doComputations()
     compTimer.start();
 
     mixThread->start();
-
 }
 
 /*!
@@ -905,7 +900,6 @@ void radioactive::showGraph()
 
     mainChart->createDefaultAxes();
     mainChart->addSeries(ser);
-
 
     //add axis to the chart
     QValueAxis *axisX = new QValueAxis;

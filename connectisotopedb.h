@@ -7,7 +7,6 @@
 #include <QtSql/QSqlError>
 #include <QtSql/QSqlQuery>
 #include <QDebug>
-static QVector<QString> dbIds; // список
 
 //to add some elements u need to open database editor(menu or F3) and write:
 //insert into isotopes values (id, 'name', mass, charge, 'half-life(sec)','alpha prob(0-1)','beta prob(0-1)')

@@ -30,6 +30,7 @@ class isotope
     bignumber _halflife;
     //
 
+
 public:
 
     explicit isotope(int mass=0, int charge = 0, bignumber quantity=0);
@@ -42,11 +43,6 @@ public:
 
     //! переменная для бд isotopedb
     QSqlDatabase db;
-    //QSqlQuery qr;
-
-    //! модель бд isotopedb
-    QSqlTableModel *model;
-    void initModel();
 
     QPair < QVector<equalIsoData> , bignumber> doDecays(bignumber iterTime=0);
 
@@ -59,6 +55,9 @@ public:
     {
         return QPair<int,int>(_mass,_charge);
     }
+
+    //! список с id изотопов, используется в isIso()
+    static QVector<QString> dbIds;
 
 signals:
 
